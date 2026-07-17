@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.example.fruitties.android.androidApp-debug-39:/xml_full_backup_content.xml.flat",
+        "source": "com.example.fruitties.android.androidApp-main-41:/xml/full_backup_content.xml"
+    },
+    {
+        "merged": "com.example.fruitties.android.androidApp-debug-39:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.fruitties.android.androidApp-main-41:/xml/data_extraction_rules.xml"
+    }
+]

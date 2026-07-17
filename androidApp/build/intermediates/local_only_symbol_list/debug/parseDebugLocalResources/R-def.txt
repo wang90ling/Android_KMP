@@ -1,0 +1,14 @@
+R_DEF: Internal format may change without notice
+local
+string add
+string add_to_cart
+string cart
+string cart_has_items
+string frutties
+string in_cart
+string loading
+string navigate_back
+string view_cart
+style AppTheme
+xml data_extraction_rules
+xml full_backup_content
