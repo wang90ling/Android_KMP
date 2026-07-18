@@ -1,19 +1,3 @@
-/*
- * Copyright 2024 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.fruitties.android.ui.main
 
 import androidx.compose.foundation.background
@@ -27,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,8 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,7 +32,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
@@ -61,72 +48,177 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
 import com.example.fruitties.android.R
 import com.example.fruitties.android.ui.FruittiesTheme
 import com.example.fruitties.android.ui.circle.CircleScreen
 import com.example.fruitties.android.ui.im.MessageScreen
 import com.example.fruitties.android.ui.mine.MineScreen
+import kotlinx.coroutines.launch
 
-private val bannerColors = listOf(
-    Color(0xFF6750A4),
-    Color(0xFF03DAC5),
-    Color(0xFFFF6B6B),
-    Color(0xFF4ECDC4),
-    Color(0xFFFFE66D),
+private val topTabTitles = listOf("推荐", "派单厅", "热门", "交友", "点唱")
+private val bottomTabTitles = listOf("推荐主播", "心动房间", "休闲天地")
+
+private data class FeatureCard(
+    val title: String,
+    val subtitle: String,
+    val gradientColors: List<Color>,
 )
 
-private data class CategoryItem(val name: String, val emoji: String)
-private data class ProductItem(val name: String, val price: String, val rating: Float, val color: Color)
-
-private val categories = listOf(
-    CategoryItem("Apple", "🍎"),
-    CategoryItem("Orange", "🍊"),
-    CategoryItem("Banana", "🍌"),
-    CategoryItem("Grape", "🍇"),
-    CategoryItem("Strawberry", "🍓"),
-    CategoryItem("Watermelon", "🍉"),
-    CategoryItem("Peach", "🍑"),
-    CategoryItem("Mango", "🥭"),
+private val featureCards = listOf(
+    FeatureCard("去交友", "遇见美好的TA", listOf(Color(0xFFD946EF), Color(0xFFDB2777))),
+    FeatureCard("NBTI测试", "挖掘潜在人格", listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))),
+    FeatureCard("去开黑", "默契队友在这里", listOf(Color(0xFF7C3AED), Color(0xFF4C1D95))),
+    FeatureCard("去扩列", "遇见有趣的人", listOf(Color(0xFFD97706), Color(0xFFEA580C))),
 )
 
-private val products = listOf(
-    ProductItem("Red Apple", "$3.99", 4.5f, Color(0xFFE57373)),
-    ProductItem("Navel Orange", "$2.99", 4.2f, Color(0xFFFFB74D)),
-    ProductItem("Banana", "$1.99", 4.8f, Color(0xFFFFF176)),
-    ProductItem("Grape", "$5.99", 4.6f, Color(0xFFBA68C8)),
-    ProductItem("Strawberry", "$4.49", 4.7f, Color(0xFFEF5350)),
-    ProductItem("Watermelon", "$6.99", 4.3f, Color(0xFF81C784)),
+private data class Anchor(
+    val name: String,
+    val avatar: String,
+    val isLive: Boolean,
+    val viewerCount: String,
+)
+
+private val anchors = listOf(
+    Anchor("小红", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20anime%20boy%20avatar%20red%20hair%203d%20style&image_size=square", true, "9"),
+    Anchor("额威威", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20anime%20boy%20avatar%20blonde%20hair%203d%20style&image_size=square", true, "6"),
+    Anchor("测试测试测试测试测...", "", false, ""),
+    Anchor("乐游集结号割发...", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20anime%20boy%20avatar%20blonde%20hair%20cool%20style&image_size=square", true, "6"),
+)
+
+private data class Room(
+    val name: String,
+    val cover: String,
+    val hostName: String,
+    val memberCount: Int,
+)
+
+private val rooms = listOf(
+    Room("甜蜜小屋", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cozy%20romantic%20room%20pink%20lighting%20anime%20style&image_size=square", "小美", 12),
+    Room("游戏开黑房", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=gaming%20room%20neon%20lights%20dark%20blue&image_size=square", "大神", 8),
+    Room("音乐派对", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20party%20room%20colorful%20lights&image_size=square", "DJ小王", 25),
+    Room("深夜聊天室", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=late%20night%20chat%20room%20warm%20lighting&image_size=square", "夜猫子", 18),
+)
+
+private data class Activity(
+    val name: String,
+    val icon: String,
+    val participants: Int,
+)
+
+private val activities = listOf(
+    Activity("真心话大冒险", "", 520),
+    Activity("谁是卧底", "", 380),
+    Activity("你画我猜", "", 290),
+    Activity("狼人杀", "", 450),
+    Activity("K歌之王", "", 320),
+    Activity("剧本杀", "", 180),
+)
+
+// 派单厅任务数据
+private data class DispatchTask(
+    val title: String,
+    val type: String,
+    val price: String,
+    val status: String,
+    val avatar: String,
+    val publisher: String,
+)
+
+private val dispatchTasks = listOf(
+    DispatchTask("陪玩游戏·王者荣耀", "游戏陪玩", "¥30/局", "待接单", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=gamer%20avatar%20cool%20headset&image_size=square", "小甜甜"),
+    DispatchTask("语音聊天·情感倾诉", "语音聊天", "¥50/小时", "待接单", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=sweet%20girl%20avatar%20headphones&image_size=square", "暖心小姐姐"),
+    DispatchTask("唱歌点播·流行金曲", "才艺点唱", "¥20/首", "待接单", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=singer%20avatar%20microphone%20stage&image_size=square", "音乐小王子"),
+    DispatchTask("开黑上分·和平精英", "游戏陪玩", "¥25/局", "进行中", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=pro%20gamer%20avatar%20military%20helmet&image_size=square", "吃鸡大神"),
+    DispatchTask("深夜电台·故事分享", "语音聊天", "¥40/小时", "待接单", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=radio%20host%20avatar%20night%20warm&image_size=square", "夜语者"),
+    DispatchTask("剧本杀·多人组局", "游戏陪玩", "¥35/场", "待接单", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=mystery%20detective%20avatar%20magnifier&image_size=square", "推理大师"),
+)
+
+// 热门排行榜数据
+private data class HotItem(
+    val rank: Int,
+    val name: String,
+    val avatar: String,
+    val hotValue: String,
+    val tag: String,
+)
+
+private val hotItems = listOf(
+    HotItem(1, "倾城小仙女", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=beautiful%20fairy%20girl%20avatar%20sparkle&image_size=square", "128.5w", "才艺主播"),
+    HotItem(2, "深夜歌手", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=male%20singer%20avatar%20microphone%20cool&image_size=square", "96.3w", "音乐才子"),
+    HotItem(3, "游戏女王", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=female%20gamer%20avatar%20neon%20glasses&image_size=square", "85.7w", "游戏陪玩"),
+    HotItem(4, "暖心大叔", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=warm%20uncle%20avatar%20smile%20gentle&image_size=square", "72.1w", "情感电台"),
+    HotItem(5, "甜美小可爱", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20sweet%20girl%20avatar%20pink&image_size=square", "68.9w", "舞蹈主播"),
+    HotItem(6, "摇滚少年", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=rock%20boy%20avatar%20guitar%20cool&image_size=square", "55.4w", "音乐才子"),
+)
+
+// 交友用户数据
+private data class DatingUser(
+    val name: String,
+    val avatar: String,
+    val age: Int,
+    val gender: String,
+    val city: String,
+    val signature: String,
+    val isOnline: Boolean,
+)
+
+private val datingUsers = listOf(
+    DatingUser("柠檬不萌", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20girl%20avatar%20yellow%20lemon%20theme&image_size=square", 22, "女", "北京", "想遇见有趣的你", true),
+    DatingUser("星辰大海", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=handsome%20boy%20avatar%20star%20galaxy%20theme&image_size=square", 25, "男", "上海", "寻找那个对的人", true),
+    DatingUser("温柔岁月", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=elegant%20woman%20avatar%20soft%20warm%20light&image_size=square", 24, "女", "广州", "愿得一人心", false),
+    DatingUser("清风明月", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=gentle%20man%20avatar%20moon%20breeze%20theme&image_size=square", 27, "男", "深圳", "等风也等你", true),
+    DatingUser("糖果女孩", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=sweet%20candy%20girl%20avatar%20colorful&image_size=square", 21, "女", "杭州", "甜甜的恋爱轮到我了吗", true),
+    DatingUser("孤独患者", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=lonely%20boy%20avatar%20dark%20moody%20style&image_size=square", 26, "男", "成都", "想找个人说说话", false),
+)
+
+// 点唱歌曲数据
+private data class Song(
+    val name: String,
+    val singer: String,
+    val cover: String,
+    val orderCount: Int,
+    val duration: String,
+)
+
+private val songs = listOf(
+    Song("晴天", "周杰伦", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20sunny%20day%20guitar&image_size=square", 1280, "4:29"),
+    Song("起风了", "买辣椒也用券", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20wind%20breeze%20sky&image_size=square", 980, "5:25"),
+    Song("孤勇者", "陈奕迅", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20lonely%20hero%20dark&image_size=square", 1560, "4:13"),
+    Song("稻香", "周杰伦", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20rice%20field%20countryside&image_size=square", 890, "3:43"),
+    Song("告白气球", "周杰伦", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20balloon%20romantic%20pink&image_size=square", 1120, "3:35"),
+    Song("年少有为", "李荣浩", "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=music%20album%20cover%20young%20ambition%20city&image_size=square", 750, "4:51"),
 )
 
 enum class BottomNavItem(val index: Int) {
     HOME(0),
-    CATEGORY(1),
-    CHAT(2),
-    CART(3),
-    PERSON(4),
+    CIRCLE(1),
+    MESSAGE(2),
+    MINE(3),
 }
 
-/**
- * @author wangling
- * @date 2026/7/17 17:46
- * @description 首页界面
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -134,103 +226,84 @@ fun MainScreen(
     onProductClick: (String) -> Unit,
     onTabClick: (BottomNavItem) -> Unit = {},
 ) {
-    var cartCount by remember { mutableIntStateOf(3) }
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedBottomNavIndex by remember { mutableIntStateOf(0) }
     var unreadMessageCount by remember { mutableIntStateOf(99) }
 
     val onTabSelected: (Int) -> Unit = { index ->
-        selectedTabIndex = index
+        selectedBottomNavIndex = index
         onTabClick(BottomNavItem.entries[index])
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
+                title = {},
                 actions = {
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = stringResource(R.string.search),
+                            tint = Color.White,
                         )
-                    }
-                    IconButton(onClick = onCartClick) {
-                        BadgedBox(
-                            badge = {
-                                Badge(
-                                    containerColor = Color(0xFFFF6B6B),
-                                    contentColor = Color.White,
-                                ) {
-                                    Text(
-                                        text = cartCount.toString(),
-                                        fontSize = 10.sp,
-                                    )
-                                }
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = stringResource(R.string.cart),
-                            )
-                        }
                     }
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = stringResource(R.string.notifications),
+                            tint = Color.White,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.White,
                 ),
+                modifier = Modifier.zIndex(1f),
             )
         },
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp,
+                containerColor = Color(0xFF1F1F3A),
+                tonalElevation = 0.dp,
             ) {
                 NavigationBarItem(
-                    selected = selectedTabIndex == 0,
+                    selected = selectedBottomNavIndex == 0,
                     onClick = { onTabSelected(0) },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = stringResource(R.string.home),
+                            tint = if (selectedBottomNavIndex == 0) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                     label = {
                         Text(
                             text = stringResource(R.string.home),
                             fontSize = 12.sp,
+                            color = if (selectedBottomNavIndex == 0) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                 )
                 NavigationBarItem(
-                    selected = selectedTabIndex == 1,
+                    selected = selectedBottomNavIndex == 1,
                     onClick = { onTabSelected(1) },
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Home,
+                            imageVector = Icons.Outlined.Group,
                             contentDescription = stringResource(R.string.categories),
+                            tint = if (selectedBottomNavIndex == 1) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                     label = {
                         Text(
                             text = stringResource(R.string.categories),
                             fontSize = 12.sp,
+                            color = if (selectedBottomNavIndex == 1) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                 )
                 NavigationBarItem(
-                    selected = selectedTabIndex == 2,
+                    selected = selectedBottomNavIndex == 2,
                     onClick = { onTabSelected(2) },
                     icon = {
                         BadgedBox(
@@ -247,8 +320,9 @@ fun MainScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Home,
+                                imageVector = Icons.Outlined.Chat,
                                 contentDescription = stringResource(R.string.chat),
+                                tint = if (selectedBottomNavIndex == 2) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                             )
                         }
                     },
@@ -256,23 +330,25 @@ fun MainScreen(
                         Text(
                             text = stringResource(R.string.chat),
                             fontSize = 12.sp,
+                            color = if (selectedBottomNavIndex == 2) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                 )
-
                 NavigationBarItem(
-                    selected = selectedTabIndex == 3,
+                    selected = selectedBottomNavIndex == 3,
                     onClick = { onTabSelected(3) },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = stringResource(R.string.mine),
+                            tint = if (selectedBottomNavIndex == 3) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                     label = {
                         Text(
                             text = stringResource(R.string.mine),
                             fontSize = 12.sp,
+                            color = if (selectedBottomNavIndex == 3) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                         )
                     },
                 )
@@ -281,611 +357,927 @@ fun MainScreen(
         contentWindowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
         ),
+        containerColor = Color(0xFF0F0F23),
     ) { paddingValues ->
-        when (selectedTabIndex) {
-            0 -> HomeContent(
-                paddingValues = paddingValues,
-                onProductClick = onProductClick,
-            )
-            1 -> CircleScreen{ }
+        when (selectedBottomNavIndex) {
+            0 -> HomeContent(paddingValues = paddingValues)
+            1 -> CircleScreen { }
             2 -> MessageScreen() { }
             3 -> MineScreen() { }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeContent(
-    paddingValues: PaddingValues,
-    onProductClick: (String) -> Unit,
+private fun HomeContent(paddingValues: PaddingValues) {
+    val pagerState = rememberPagerState(initialPage = 0) { topTabTitles.size }
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            onTabClick = { index ->
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(index)
+                }
+            },
+        )
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+        ) { pageIndex ->
+            when (pageIndex) {
+                0 -> RecommendTabContent()
+                1 -> DispatchTabContent()
+                2 -> HotTabContent()
+                3 -> DatingTabContent()
+                4 -> SingTabContent()
+            }
+        }
+
+        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
+    }
+}
+
+@Composable
+private fun TopTabRow(
+    selectedTabIndex: Int,
+    onTabClick: (Int) -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
+    TabRow(
+        selectedTabIndex = selectedTabIndex,
+        containerColor = Color.Transparent,
+        divider = {},
     ) {
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            HomeBannerSection()
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            HomeSectionTitle(title = stringResource(R.string.categories))
-            CategoryScrollSection()
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            HomeSectionTitle(title = stringResource(R.string.popular_products))
-            PopularProductsSection(onProductClick = onProductClick)
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            HomeSectionTitle(title = stringResource(R.string.new_arrivals))
-            NewArrivalsSection(onProductClick = onProductClick)
-        }
-        item {
-            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
+        topTabTitles.forEachIndexed { index, title ->
+            Tab(
+                selected = selectedTabIndex == index,
+                onClick = { onTabClick(index) },
+                text = {
+                    Text(
+                        text = title,
+                        fontSize = 18.sp,
+                        fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selectedTabIndex == index) Color.White else Color(0xFF8B8BA7),
+                    )
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun CategoryContent(paddingValues: PaddingValues) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        contentPadding = PaddingValues(vertical = 16.dp),
-    ) {
-        items(categories) { category ->
-            CategoryItem(category)
+private fun RecommendTabContent() {
+    var selectedBottomTabIndex by remember { mutableIntStateOf(0) }
+
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item {
+            Spacer(modifier = Modifier.height(12.dp))
+            FeatureCardsSection()
         }
         item {
-            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TabRow(
+                    selectedTabIndex = selectedBottomTabIndex,
+                    containerColor = Color.Transparent,
+                    divider = {},
+                    modifier = Modifier.weight(1f),
+                ) {
+                    bottomTabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedBottomTabIndex == index,
+                            onClick = { selectedBottomTabIndex = index },
+                            text = {
+                                Text(
+                                    text = title,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (selectedBottomTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selectedBottomTabIndex == index) Color.White else Color(0xFF8B8BA7),
+                                )
+                            },
+                        )
+                    }
+                }
+                Text(
+                    text = "筛选",
+                    fontSize = 13.sp,
+                    color = Color(0xFF8B8BA7),
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .clickable { },
+                )
+            }
+        }
+        when (selectedBottomTabIndex) {
+            0 -> items(anchors.chunked(2)) { pair ->
+                AnchorGridRow(items = pair)
+            }
+            1 -> items(rooms.chunked(2)) { pair ->
+                RoomGridRow(items = pair)
+            }
+            2 -> items(activities.chunked(2)) { pair ->
+                ActivityGridRow(items = pair)
+            }
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun CategoryItem(category: CategoryItem) {
+private fun DispatchTabContent() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(dispatchTasks) { task ->
+            DispatchTaskCard(task = task)
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun DispatchTaskCard(task: DispatchTask) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable { },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = Color(0xFF1F1F3A),
         ),
+        elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(56.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(Color(0xFF374151)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = category.emoji,
-                    fontSize = 24.sp,
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = category.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = ">",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ChatContent(paddingValues: PaddingValues) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        contentPadding = PaddingValues(16.dp),
-    ) {
-        items(5) { index ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-                    .clickable { },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                ),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "U",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "User ${index + 1}",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = "Click to start a conversation",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
-        }
-    }
-}
-
-@Composable
-private fun CartContent(paddingValues: PaddingValues) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        contentPadding = PaddingValues(16.dp),
-    ) {
-        items(products) { product ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .clickable { },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                ),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(product.color),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = product.name.take(1),
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.9f),
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = product.name,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = "★ ${product.rating}",
-                            fontSize = 12.sp,
-                            color = Color(0xFFFFB400),
-                        )
-                    }
-                    Text(
-                        text = product.price,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
-        item {
-            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
-        }
-    }
-}
-
-@Composable
-private fun PersonContent(paddingValues: PaddingValues) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        contentPadding = PaddingValues(16.dp),
-    ) {
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "?",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = "Login / Register",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                        Text(
-                            text = "Tap to sign in",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.safeDrawing))
-        }
-    }
-}
-
-@Composable
-private fun HomeBannerSection() {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items((0..2).toList()) { index ->
-            Box(
-                modifier = Modifier
-                    .fillParentMaxWidth(0.85f)
-                    .height(160.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                bannerColors[index % bannerColors.size],
-                                bannerColors[(index + 1) % bannerColors.size],
-                            ),
-                        ),
-                    )
-                    .clickable { },
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                ) {
-                    Text(
-                        text = if (index == 0) stringResource(R.string.banner_title_1)
-                        else if (index == 1) stringResource(R.string.banner_title_2)
-                        else stringResource(R.string.banner_title_3),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (index == 0) stringResource(R.string.banner_subtitle_1)
-                        else if (index == 1) stringResource(R.string.banner_subtitle_2)
-                        else stringResource(R.string.banner_subtitle_3),
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.85f),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = Color.White,
-                                shape = RoundedCornerShape(20.dp),
-                            )
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.shop_now),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = bannerColors[index % bannerColors.size],
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeSectionTitle(title: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = stringResource(R.string.see_all),
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable { },
-        )
-    }
-}
-
-@Composable
-private fun CategoryScrollSection() {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items(categories) { category ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { },
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = category.emoji,
-                        fontSize = 28.sp,
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = category.name,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PopularProductsSection(onProductClick: (String) -> Unit) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items(products) { product ->
-            ProductCard(
-                product = product,
-                onClick = { onProductClick(product.name) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun NewArrivalsSection(onProductClick: (String) -> Unit) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        products.take(3).forEach { product ->
-            CompactProductItem(
-                product = product,
-                onClick = { onProductClick(product.name) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProductCard(
-    product: ProductItem,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .width(150.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .background(product.color),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = product.name.take(1),
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.9f),
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.9f))
-                        .clickable { },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_to_cart),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier.padding(12.dp),
-            ) {
-                Text(
-                    text = product.name,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = product.price,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "★ ${product.rating}",
-                        fontSize = 12.sp,
-                        color = Color(0xFFFFB400),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompactProductItem(
-    product: ProductItem,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(product.color),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = product.name.take(1),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.9f),
+                AsyncImage(
+                    model = task.avatar,
+                    contentDescription = task.publisher,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = product.name,
+                    text = task.title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "★ ${product.rating}",
-                    fontSize = 12.sp,
-                    color = Color(0xFFFFB400),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFFE879F9).copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = task.type,
+                            fontSize = 11.sp,
+                            color = Color(0xFFE879F9),
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "发布者: ${task.publisher}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = product.price,
+                    text = task.price,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color(0xFFE879F9),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable { },
-                    contentAlignment = Alignment.Center,
+                        .background(
+                            if (task.status == "待接单") Color(0xFFD97706) else Color(0xFF10B981),
+                            RoundedCornerShape(10.dp),
+                        )
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_to_cart),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(18.dp),
+                    Text(
+                        text = task.status,
+                        fontSize = 11.sp,
+                        color = Color.White,
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HotTabContent() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(hotItems) { item ->
+            HotRankCard(item = item)
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun HotRankCard(item: HotItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when (item.rank) {
+                            1 -> Color(0xFFEF4444)
+                            2 -> Color(0xFFF59E0B)
+                            3 -> Color(0xFFEAB308)
+                            else -> Color(0xFF374151)
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = item.rank.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (item.rank <= 3) Color.White else Color(0xFF8B8BA7),
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF374151)),
+            ) {
+                AsyncImage(
+                    model = item.avatar,
+                    contentDescription = item.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFFE879F9).copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = item.tag,
+                        fontSize = 11.sp,
+                        color = Color(0xFFE879F9),
+                    )
+                }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = item.hotValue,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFEF4444),
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "热度",
+                    fontSize = 11.sp,
+                    color = Color(0xFF8B8BA7),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DatingTabContent() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(datingUsers) { user ->
+            DatingUserCard(user = user)
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun DatingUserCard(user: DatingUser) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF374151)),
+            ) {
+                AsyncImage(
+                    model = user.avatar,
+                    contentDescription = user.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+                if (user.isOnline) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF10B981))
+                            .padding(2.dp),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = user.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(if (user.gender == "女") Color(0xFFEC4899) else Color(0xFF3B82F6)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = user.gender,
+                            fontSize = 11.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${user.age}岁",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = user.city,
+                        fontSize = 12.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (user.isOnline) "在线" else "离线",
+                        fontSize = 12.sp,
+                        color = if (user.isOnline) Color(0xFF10B981) else Color(0xFF8B8BA7),
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = user.signature,
+                    fontSize = 12.sp,
+                    color = Color(0xFF8B8BA7),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFFE879F9), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable { },
+            ) {
+                Text(
+                    text = "关注",
+                    fontSize = 13.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SingTabContent() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(songs) { song ->
+            SongCard(song = song)
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun SongCard(song: Song) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF374151)),
+            ) {
+                AsyncImage(
+                    model = song.cover,
+                    contentDescription = song.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = song.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = song.singer,
+                    fontSize = 13.sp,
+                    color = Color(0xFF8B8BA7),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "已点唱 ${song.orderCount}次",
+                        fontSize = 11.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = song.duration,
+                        fontSize = 11.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFFE879F9), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable { },
+            ) {
+                Text(
+                    text = "点唱",
+                    fontSize = 13.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeatureCardsSection() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        content = {
+            featureCards.take(2).forEach { card ->
+                FeatureCardItem(
+                    card = card,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        content = {
+            featureCards.drop(2).forEach { card ->
+                FeatureCardItem(
+                    card = card,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun FeatureCardItem(
+    card: FeatureCard,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1.2f)
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent,
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.verticalGradient(card.gradientColors)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = card.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = card.subtitle,
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+private fun AnchorCard(
+    anchor: Anchor,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (anchor.avatar.isNotEmpty()) {
+                AsyncImage(
+                    model = anchor.avatar,
+                    contentDescription = anchor.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF374151)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = anchor.name.take(1),
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+            }
+
+            if (anchor.isLive) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                        .background(Color(0xFFEF4444), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = "推荐主播",
+                        fontSize = 10.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                        ),
+                    )
+                    .padding(12.dp),
+            ) {
+                Column {
+                    Text(
+                        text = anchor.name,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (anchor.isLive) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Live",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(12.dp),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "小帅 ${anchor.viewerCount}",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RoomCard(
+    room: Room,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (room.cover.isNotEmpty()) {
+                AsyncImage(
+                    model = room.cover,
+                    contentDescription = room.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF374151)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = room.name.take(1),
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                        ),
+                    )
+                    .padding(12.dp),
+            ) {
+                Column {
+                    Text(
+                        text = room.name,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${room.hostName} · ${room.memberCount}人",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnchorGridRow(items: List<Anchor>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items.forEach { anchor ->
+            AnchorCard(anchor = anchor, modifier = Modifier.weight(1f))
+        }
+        if (items.size == 1) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+}
+
+@Composable
+private fun RoomGridRow(items: List<Room>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items.forEach { room ->
+            RoomCard(room = room, modifier = Modifier.weight(1f))
+        }
+        if (items.size == 1) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+}
+
+@Composable
+private fun ActivityGridRow(items: List<Activity>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items.forEach { activity ->
+            ActivityCard(activity = activity, modifier = Modifier.weight(1f))
+        }
+        if (items.size == 1) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+}
+
+@Composable
+private fun ActivityCard(
+    activity: Activity,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1.2f)
+            .clickable { },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1F1F3A),
+        ),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF374151)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = activity.name.take(1),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE879F9),
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = activity.name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "${activity.participants}人在玩",
+                    fontSize = 12.sp,
+                    color = Color(0xFF8B8BA7),
+                )
             }
         }
     }
@@ -894,7 +1286,7 @@ private fun CompactProductItem(
 @Preview
 @Composable
 private fun MainScreenPreview() {
-    FruittiesTheme {
+    FruittiesTheme(darkTheme = true) {
         MainScreen(
             onCartClick = {},
             onProductClick = {},
