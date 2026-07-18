@@ -36,7 +36,27 @@ import com.example.fruitties.android.ui.CartScreen
 import com.example.fruitties.android.ui.FruittieScreen
 import com.example.fruitties.android.ui.FruittiesTheme
 import com.example.fruitties.android.ui.ListScreen
+import com.example.fruitties.android.ui.circle.CircleScreen
+import com.example.fruitties.android.ui.im.MessageScreen
+import com.example.fruitties.android.ui.login.LoginScreen
+import com.example.fruitties.android.ui.main.MainScreen
+import com.example.fruitties.android.ui.mine.MineScreen
 import kotlinx.serialization.Serializable
+
+@Serializable
+data object MainScreenKey : NavKey
+
+@Serializable
+data object LoginScreenKey : NavKey
+
+@Serializable
+data object CircleScreenKey : NavKey
+
+@Serializable
+data object MessageScreenKey : NavKey
+
+@Serializable
+data object MineScreenKey : NavKey
 
 @Serializable
 data object ListScreenKey : NavKey
@@ -72,7 +92,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NavApp() {
-    val backStack = rememberNavBackStack(ListScreenKey)
+    val backStack = rememberNavBackStack(MainScreenKey)
 
     NavDisplay(
         backStack = backStack,
@@ -81,6 +101,43 @@ fun NavApp() {
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
+            entry<MainScreenKey> {
+                MainScreen(
+                    onCartClick = {
+                        backStack.add(CartScreenKey)
+                    },
+                    onProductClick = { productName ->
+                        // Navigate to detail if needed
+                    },
+                )
+            }
+            entry<LoginScreenKey> {
+                LoginScreen(
+                    onLoginSuccess = {
+                        backStack.removeIf { it is LoginScreenKey }
+                    },
+                    onRegisterClick = {
+                        // Navigate to register screen if needed
+                    },
+                )
+            }
+            entry<CircleScreenKey> {
+                CircleScreen(
+                    onPostClick = { username ->
+                        // Navigate to post detail if needed
+                    },
+                )
+            }
+            entry<MessageScreenKey> {
+                MessageScreen { content ->
+                    // Navigate to notification detail if needed
+                }
+            }
+            entry<MineScreenKey> {
+                MineScreen { menuTitle ->
+                    // Handle menu item click
+                }
+            }
             entry<ListScreenKey> {
                 ListScreen(
                     onFruittieClick = {

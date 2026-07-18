@@ -16,172 +16,251 @@
 
 package com.example.fruitties.android.ui.login
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.fruitties.android.LocalAppContainer
+import androidx.compose.ui.unit.sp
 import com.example.fruitties.android.R
 import com.example.fruitties.android.ui.FruittiesTheme
-import com.example.fruitties.model.CartItemDetails
-import com.example.fruitties.model.Fruittie
-import com.example.fruitties.viewmodel.CartUiState
-import com.example.fruitties.viewmodel.CartViewModel
 
+/**
+ * @author wangling
+ * @date 2026/7/17 17:47
+ * @description 登录界面
+ */
 @Composable
 fun LoginScreen(
-    onNavBarBack: () -> Unit,
-    viewModel: CartViewModel = viewModel(factory = LocalAppContainer.current.cartViewModelFactory),
+    onLoginSuccess: () -> Unit,
+    onRegisterClick: () -> Unit,
 ) {
-    val cartState by viewModel.cartUiState.collectAsState()
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     LoginScreen(
-        onNavBarBack = onNavBarBack,
-        cartState = cartState,
-        increaseCountClick = viewModel::increaseCountClick,
-        decreaseCountClick = viewModel::decreaseCountClick,
+        username = username,
+        password = password,
+        onUsernameChange = { username = it },
+        onPasswordChange = { password = it },
+        onLoginClick = {
+            focusManager.clearFocus()
+            onLoginSuccess()
+        },
+        onRegisterClick = onRegisterClick,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onNavBarBack: () -> Unit,
-    cartState: CartUiState,
-    decreaseCountClick: (CartItemDetails) -> Unit,
-    increaseCountClick: (CartItemDetails) -> Unit,
+    username: String,
+    password: String,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onNavBarBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back",
-                        )
-                    }
-                },
-                title = {
-                    Text(text = stringResource(R.string.cart))
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    scrolledContainerColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-            )
-        },
-        contentWindowInsets = WindowInsets.safeDrawing.only(
-            // Do not include Bottom so scrolled content is drawn below system bars.
-            // Include Horizontal because some devices have camera cutouts on the side.
-            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-        ),
-    ) { paddingValues ->
+    val focusManager = LocalFocusManager.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(
+                WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                ).asPaddingValues(),
+            ),
+    ) {
         Column(
             modifier = Modifier
-                .padding(paddingValues)
-                .consumeWindowInsets(paddingValues)
-                .padding(16.dp),
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val cartItemCount = cartState.totalItemCount
-            Text(
-                text = stringResource(R.string.cart_has_items, cartItemCount),
-            )
-            HorizontalDivider()
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                items(cartState.cartDetails) { cartItem ->
-                    CartItem(
-                        cartItem = cartItem,
-                        decreaseCountClick = decreaseCountClick,
-                        increaseCountClick = increaseCountClick,
-                    )
-                }
-                item {
-                    Spacer(
-                        Modifier.windowInsetsBottomHeight(
-                            WindowInsets.systemBars,
-                        ),
-                    )
-                }
-            }
-        }
-    }
-}
+            Spacer(modifier = Modifier.height(80.dp))
 
-@Composable
-fun CartItem(
-    cartItem: CartItemDetails,
-    increaseCountClick: (CartItemDetails) -> Unit,
-    decreaseCountClick: (CartItemDetails) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(text = "${cartItem.count}x")
-        Spacer(Modifier.width(8.dp))
-        Text(text = cartItem.fruittie.name)
-        Spacer(Modifier.weight(1f))
-        FilledIconButton(
-            onClick = { decreaseCountClick(cartItem) },
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.error),
-        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "F",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "-",
-                color = MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center,
+                text = stringResource(R.string.app_login_title),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-        }
-        FilledIconButton(
-            onClick = { increaseCountClick(cartItem) },
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.Green),
-        ) {
+
             Text(
-                text = "+",
-                color = MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center,
+                text = stringResource(R.string.app_login_subtitle),
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
             )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = onUsernameChange,
+                label = { Text(stringResource(R.string.login_username)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = { Text(stringResource(R.string.login_password)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                ),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        onLoginClick()
+                    },
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextButton(
+                onClick = { },
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Text(
+                    text = stringResource(R.string.forgot_password),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 14.sp,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onLoginClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+                enabled = username.isNotBlank() && password.isNotBlank(),
+            ) {
+                Text(
+                    text = stringResource(R.string.login_button),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            TextButton(
+                onClick = onRegisterClick,
+                modifier = Modifier.padding(bottom = 32.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.no_account_register),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 14.sp,
+                )
+            }
         }
     }
 }
@@ -191,56 +270,12 @@ fun CartItem(
 private fun LoginScreenPreview() {
     FruittiesTheme {
         LoginScreen(
-            onNavBarBack = {},
-            cartState = CartUiState(
-                cartDetails = listOf(
-                    CartItemDetails(
-                        fruittie = Fruittie(
-                            name = "Banana",
-                            fullName = "Banana Banana",
-                            calories = "100",
-                        ),
-                        count = 4,
-                    ),
-                    CartItemDetails(
-                        fruittie = Fruittie(
-                            name = "Orange",
-                            fullName = "Orange Orange",
-                            calories = "100",
-                        ),
-                        count = 1,
-                    ),
-                    CartItemDetails(
-                        fruittie = Fruittie(
-                            name = "Apple",
-                            fullName = "Apple Apple",
-                            calories = "100",
-                        ),
-                        count = 100,
-                    ),
-                ),
-            ),
-            decreaseCountClick = {},
-            increaseCountClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CartItemPreview() {
-    FruittiesTheme {
-        CartItem(
-            cartItem = CartItemDetails(
-                fruittie = Fruittie(
-                    name = "Banana",
-                    fullName = "Banana Banana",
-                    calories = "100",
-                ),
-                count = 4,
-            ),
-            increaseCountClick = {},
-            decreaseCountClick = {},
+            username = "",
+            password = "",
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onLoginClick = {},
+            onRegisterClick = {},
         )
     }
 }

@@ -24,4 +24,63 @@
     <string name="add_to_cart">Add to cart</string>
     <string name="in_cart">In cart: %1$d</string>
     <string name="cart_has_items">Cart has %1$d items</string>
+
+    <!-- App -->
+    <string name="app_name">Fruitties</string>
+
+    <!-- Login Screen -->
+    <string name="app_login_title">Welcome Back</string>
+    <string name="app_login_subtitle">Sign in to continue</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_button">Login</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="no_account_register">Don\'t have an account? Register</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+
+    <!-- Main Screen -->
+    <string name="search">Search</string>
+    <string name="notifications">Notifications</string>
+    <string name="home">主页</string>
+    <string name="chat">消息</string>
+    <string name="mine">我的</string>
+    <string name="categories">圈子</string>
+    <string name="popular_products">Popular Products</string>
+    <string name="new_arrivals">New Arrivals</string>
+    <string name="see_all">See All</string>
+    <string name="shop_now">Shop Now</string>
+    <string name="banner_title_1">Fresh Fruits</string>
+    <string name="banner_subtitle_1">Get 20% off on all items</string>
+    <string name="banner_title_2">Daily Discount</string>
+    <string name="banner_subtitle_2">Limited time offer</string>
+    <string name="banner_title_3">Seasonal Picks</string>
+    <string name="banner_subtitle_3">Best quality guaranteed</string>
+
+    <!-- Circle Screen -->
+    <string name="circle_title">Circle</string>
+    <string name="publish">Publish</string>
+    <string name="recommended_friends">Recommended Friends</string>
+    <string name="like">Like</string>
+    <string name="comments">Comments</string>
+    <string name="share">Share</string>
+
+    <!-- Message Screen -->
+    <string name="message_title">Messages</string>
+    <string name="settings">Settings</string>
+
+    <!-- Mine Screen -->
+    <string name="mine_title">Profile</string>
+    <string name="click_to_login">Click to Login</string>
+    <string name="login_subtitle">Sign in to enjoy more features</string>
+    <string name="following">Following</string>
+    <string name="followers">Followers</string>
+    <string name="likes">Likes</string>
+    <string name="vip_title">VIP Membership</string>
+    <string name="vip_subtitle">Unlock exclusive benefits</string>
+    <string name="open_vip">Open Now</string>
+    <string name="account_management">Account Management</string>
+    <string name="settings_preferences">Settings</string>
+    <string name="support_feedback">Support &amp; Feedback</string>
+    <string name="logout">Logout</string>
 </resources>

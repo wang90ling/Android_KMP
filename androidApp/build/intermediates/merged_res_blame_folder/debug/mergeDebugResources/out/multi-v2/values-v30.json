@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.fruitties.android.androidApp-mergeDebugResources-37:/values-v30/values-v30.xml",
+            "outputFile": "com.example.fruitties.android.androidApp-mergeDebugResources-38:/values-v30/values-v30.xml",
             "map": [
                 {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/78fb79c4851fadcda553a0c454d6ae21/transformed/material3/res/values-v30/values-v30.xml",
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/21082d3f5943519459436fc0c64fb96f/transformed/material3/res/values-v30/values-v30.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

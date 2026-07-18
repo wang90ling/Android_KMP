@@ -1,10 +1,27 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.fruitties.android.androidApp-mergeDebugResources-37:/values-or/values-or.xml",
+            "outputFile": "com.example.fruitties.android.androidApp-mergeDebugResources-38:/values-or/values-or.xml",
             "map": [
                 {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/ef50511905220fdeb2e0d8a549744a86/transformed/foundation-release/res/values-or/values-or.xml",
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/79e476ad80a06c9bbb06af5af49567b8/transformed/ui-release/res/values-or/values-or.xml",
+                    "from": {
+                        "startLines": "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "179,276,363,455,555,641,718,816,904,991,1069,1151,1221,1305,1380,1457,1533,1616,1683",
+                        "endColumns": "96,86,91,99,85,76,97,87,86,77,81,69,83,74,76,75,82,66,118",
+                        "endOffsets": "271,358,450,550,636,713,811,899,986,1064,1146,1216,1300,1375,1452,1528,1611,1678,1797"
+                    },
+                    "to": {
+                        "startLines": "10,11,12,13,14,15,16,84,85,86,87,88,89,90,91,92,94,95,96",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "913,1010,1097,1189,1289,1375,1452,8990,9078,9165,9243,9325,9395,9479,9554,9631,9808,9891,9958",
+                        "endColumns": "96,86,91,99,85,76,97,87,86,77,81,69,83,74,76,75,82,66,118",
+                        "endOffsets": "1005,1092,1184,1284,1370,1447,1545,9073,9160,9238,9320,9390,9474,9549,9626,9702,9886,9953,10072"
+                    }
+                },
+                {
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/14a793cdda9a1e79e965378829b3b367/transformed/foundation-release/res/values-or/values-or.xml",
                     "from": {
                         "startLines": "2,3,4",
                         "startColumns": "4,4,4",
@@ -21,7 +38,7 @@
                     }
                 },
                 {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/6b5bc6330101a4c36cb0b2c919a84e6e/transformed/material/res/values-or/values-or.xml",
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/397455171e7ade6590c12e605331153f/transformed/material/res/values-or/values-or.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -38,7 +55,7 @@
                     }
                 },
                 {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/78fb79c4851fadcda553a0c454d6ae21/transformed/material3/res/values-or/values-or.xml",
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/21082d3f5943519459436fc0c64fb96f/transformed/material3/res/values-or/values-or.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -55,7 +72,7 @@
                     }
                 },
                 {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/0d9adac6ab321e5efae90ab7f30e3df0/transformed/core-1.16.0/res/values-or/values-or.xml",
+                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/be6bd4a19b34f22a3e75e082047c9dbe/transformed/core-1.16.0/res/values-or/values-or.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -69,23 +86,6 @@
                         "startOffsets": "178,281,383,486,591,692,794,9707",
                         "endColumns": "102,101,102,104,100,101,118,100",
                         "endOffsets": "276,378,481,586,687,789,908,9803"
-                    }
-                },
-                {
-                    "source": "/Users/wangling/.gradle/caches/8.14/transforms/7fb0f6d87b36e760b9b22f96320cac85/transformed/ui-release/res/values-or/values-or.xml",
-                    "from": {
-                        "startLines": "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "179,276,363,455,555,641,718,816,904,991,1069,1151,1221,1305,1380,1457,1533,1616,1683",
-                        "endColumns": "96,86,91,99,85,76,97,87,86,77,81,69,83,74,76,75,82,66,118",
-                        "endOffsets": "271,358,450,550,636,713,811,899,986,1064,1146,1216,1300,1375,1452,1528,1611,1678,1797"
-                    },
-                    "to": {
-                        "startLines": "10,11,12,13,14,15,16,84,85,86,87,88,89,90,91,92,94,95,96",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "913,1010,1097,1189,1289,1375,1452,8990,9078,9165,9243,9325,9395,9479,9554,9631,9808,9891,9958",
-                        "endColumns": "96,86,91,99,85,76,97,87,86,77,81,69,83,74,76,75,82,66,118",
-                        "endOffsets": "1005,1092,1184,1284,1370,1447,1545,9073,9160,9238,9320,9390,9474,9549,9626,9702,9886,9953,10072"
                     }
                 }
             ]
