@@ -48,8 +48,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -235,32 +236,6 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = stringResource(R.string.search),
-                            tint = Color.White,
-                        )
-                    }
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = stringResource(R.string.notifications),
-                            tint = Color.White,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.White,
-                ),
-                modifier = Modifier.zIndex(1f),
-            )
-        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color(0xFF1F1F3A),
@@ -374,7 +349,7 @@ private fun HomeContent(paddingValues: PaddingValues) {
     val pagerState = rememberPagerState(initialPage = 0) { topTabTitles.size }
     val coroutineScope = rememberCoroutineScope()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(top = 20.dp)) {
         TopTabRow(
             selectedTabIndex = pagerState.currentPage,
             onTabClick = { index ->
@@ -406,24 +381,42 @@ private fun TopTabRow(
     selectedTabIndex: Int,
     onTabClick: (Int) -> Unit,
 ) {
-    TabRow(
-        selectedTabIndex = selectedTabIndex,
-        containerColor = Color.Transparent,
-        divider = {},
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         topTabTitles.forEachIndexed { index, title ->
-            Tab(
-                selected = selectedTabIndex == index,
-                onClick = { onTabClick(index) },
-                text = {
-                    Text(
-                        text = title,
-                        fontSize = 18.sp,
-                        fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTabIndex == index) Color.White else Color(0xFF8B8BA7),
+            Column(
+                modifier = Modifier
+                    .clickable { onTabClick(index) }
+                    .padding(vertical = 10.dp, horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                    color = if (selectedTabIndex == index) Color(0xFFE879F9) else Color(0xFF8B8BA7),
+                )
+                if (selectedTabIndex == index) {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(20.dp)
+                            .height(2.dp)
+                            .background(Color(0xFFE879F9), RoundedCornerShape(2.dp)),
                     )
-                },
-            )
+                }else{
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(20.dp)
+                            .height(2.dp)
+                            .background(Color.Transparent)
+                    )
+                }
+            }
         }
     }
 }
@@ -444,7 +437,7 @@ private fun RecommendTabContent() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TabRow(
+                SecondaryTabRow(
                     selectedTabIndex = selectedBottomTabIndex,
                     containerColor = Color.Transparent,
                     divider = {},
