@@ -1,2 +1,36 @@
-/androidApp/build/
-/androidApp/build/intermediates/
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Android Studio
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+*.o
+*.so
+*.jar
+*.ear
+*.war
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+*.tmp
+
+# Misc
+*.swp
+*.swo
+*~
