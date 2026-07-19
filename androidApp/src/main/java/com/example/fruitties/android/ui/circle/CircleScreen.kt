@@ -81,7 +81,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fruitties.android.R
-import com.example.fruitties.android.ui.FruittiesTheme
+import com.example.fruitties.android.ui.AppTheme
 
 private val tabTitles = listOf(
     "推荐",
@@ -502,7 +502,7 @@ private fun PostImagesGrid(imageCount: Int) {
 @Preview
 @Composable
 private fun CircleScreenPreview() {
-    FruittiesTheme {
+    AppTheme() {
         CircleScreen(
             onPostClick = {},
         )

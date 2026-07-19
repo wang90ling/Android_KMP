@@ -73,7 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.example.fruitties.android.R
-import com.example.fruitties.android.ui.FruittiesTheme
+import com.example.fruitties.android.ui.AppTheme
 import com.example.fruitties.android.ui.circle.CircleScreen
 import com.example.fruitties.android.ui.im.MessageScreen
 import com.example.fruitties.android.ui.mine.MineScreen
@@ -1279,7 +1279,7 @@ private fun ActivityCard(
 @Preview
 @Composable
 private fun MainScreenPreview() {
-    FruittiesTheme(darkTheme = true) {
+    AppTheme(darkTheme = true) {
         MainScreen(
             onCartClick = {},
             onProductClick = {},

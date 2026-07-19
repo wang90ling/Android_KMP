@@ -32,10 +32,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.example.fruitties.android.ui.CartScreen
-import com.example.fruitties.android.ui.FruittieScreen
-import com.example.fruitties.android.ui.FruittiesTheme
-import com.example.fruitties.android.ui.ListScreen
+import com.example.fruitties.android.ui.AppTheme
 import com.example.fruitties.android.ui.circle.CircleScreen
 import com.example.fruitties.android.ui.im.MessageScreen
 import com.example.fruitties.android.ui.login.LoginScreen
@@ -77,7 +74,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalAppContainer provides (this.applicationContext as FruittiesAndroidApp).container,
             ) {
-                FruittiesTheme {
+                AppTheme() {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background,
@@ -137,32 +134,6 @@ fun NavApp() {
                 MineScreen { menuTitle ->
                     // Handle menu item click
                 }
-            }
-            entry<ListScreenKey> {
-                ListScreen(
-                    onFruittieClick = {
-                        backStack.add(FruittieScreenKey(it.id))
-                    },
-                    onClickViewCart = {
-                        backStack.add(CartScreenKey)
-                    },
-                )
-            }
-            entry<FruittieScreenKey> {
-                FruittieScreen(
-                    fruittieId = it.id,
-                    onNavBarBack = {
-                        backStack.removeIf { it is FruittieScreenKey }
-                    },
-                )
-            }
-
-            entry<CartScreenKey> {
-                CartScreen(
-                    onNavBarBack = {
-                        backStack.removeIf { it is CartScreenKey }
-                    },
-                )
             }
         },
     )

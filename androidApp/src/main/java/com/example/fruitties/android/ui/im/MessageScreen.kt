@@ -75,7 +75,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fruitties.android.R
-import com.example.fruitties.android.ui.FruittiesTheme
+import com.example.fruitties.android.ui.AppTheme
 
 private val messageTabTitles = listOf(
     "消息",
@@ -446,7 +446,7 @@ private fun NotificationListItem(
 @Preview
 @Composable
 private fun MessageScreenPreview() {
-    FruittiesTheme {
+    AppTheme() {
         MessageScreen {}
     }
 }

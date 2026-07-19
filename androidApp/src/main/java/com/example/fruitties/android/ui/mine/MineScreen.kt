@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.fruitties.android.R
-import com.example.fruitties.android.ui.FruittiesTheme
+import com.example.fruitties.android.ui.AppTheme
 
 private val HeaderGradient = Brush.linearGradient(
     colors = listOf(Color(0xFFE0CFFC), Color(0xFFFFD1F0)),
@@ -448,7 +448,7 @@ private fun ServiceGridItem(
 @Preview
 @Composable
 private fun MineScreenPreview() {
-    FruittiesTheme {
+    AppTheme() {
         MineScreen {}
     }
 }
