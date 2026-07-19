@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -274,35 +276,36 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Button(
-                    onClick = onLoginClick,
+                val isLoginEnabled = isChecked && phoneNumber.length == 11 && verificationCode.length >= 4
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.White,
-                    ),
-                    enabled = isChecked && phoneNumber.length == 11 && verificationCode.length >= 4,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFF3B82F6), Color(0xFF9333EA), Color(0xFFEC4899)),
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .then(
+                            if (isLoginEnabled) {
+                                Modifier.background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF3B82F6), Color(0xFF9333EA), Color(0xFFEC4899)),
+                                    )
                                 )
-                            )
-                            .clip(RoundedCornerShape(28.dp)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "登录",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            } else {
+                                Modifier.background(Color(0xFFE5E7EB))
+                            }
                         )
-                    }
+                        .clickable(enabled = isLoginEnabled) {
+                            if (isLoginEnabled) {
+                                onLoginClick()
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "登录",
+                        fontSize = 16.sp,
+                        color = if (isLoginEnabled) Color(0xFFFFFFFF) else Color(0xFF9CA3AF),
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -332,7 +335,8 @@ fun LoginScreen(
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     Box(
                         modifier = Modifier
@@ -348,6 +352,7 @@ fun LoginScreen(
                             tint = Color(0xFF1B9AF7),
                         )
                     }
+                    Spacer(modifier = Modifier.width(48.dp))
                     Box(
                         modifier = Modifier
                             .size(48.dp)
