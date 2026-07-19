@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -295,7 +295,7 @@ fun MainScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Chat,
+                                imageVector = Icons.AutoMirrored.Outlined.Chat,
                                 contentDescription = stringResource(R.string.chat),
                                 tint = if (selectedBottomNavIndex == 2) Color(0xFFE879F9) else Color(0xFF8B8BA7),
                             )
@@ -431,7 +431,7 @@ private fun RecommendTabContent() {
             FeatureCardsSection()
         }
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -480,7 +480,7 @@ private fun RecommendTabContent() {
             }
         }
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
