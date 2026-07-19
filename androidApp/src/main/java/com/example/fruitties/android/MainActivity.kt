@@ -25,7 +25,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -36,8 +38,10 @@ import com.example.fruitties.android.ui.AppTheme
 import com.example.fruitties.android.ui.circle.CircleScreen
 import com.example.fruitties.android.ui.im.MessageScreen
 import com.example.fruitties.android.ui.login.LoginScreen
+import com.example.fruitties.android.ui.login.LoginStateManager
 import com.example.fruitties.android.ui.main.MainScreen
 import com.example.fruitties.android.ui.mine.MineScreen
+import com.example.fruitties.android.ui.mine.SettingsScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -54,6 +58,9 @@ data object MessageScreenKey : NavKey
 
 @Serializable
 data object MineScreenKey : NavKey
+
+@Serializable
+data object SettingsScreenKey : NavKey
 
 @Serializable
 data object ListScreenKey : NavKey
@@ -89,7 +96,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NavApp() {
-    val backStack = rememberNavBackStack(MainScreenKey)
+    val context = LocalContext.current
+    val loginStateManager = remember { LoginStateManager(context) }
+    val initialKey = if (loginStateManager.isLoggedIn()) MainScreenKey else LoginScreenKey
+    val backStack = rememberNavBackStack(initialKey)
 
     NavDisplay(
         backStack = backStack,
@@ -111,10 +121,11 @@ fun NavApp() {
             entry<LoginScreenKey> {
                 LoginScreen(
                     onLoginSuccess = {
-                        backStack.removeIf { it is LoginScreenKey }
+                        loginStateManager.login()
+                        backStack.clear()
+                        backStack.add(MainScreenKey)
                     },
-                    onRegisterClick = {
-                        // Navigate to register screen if needed
+                    onBackClick = {
                     },
                 )
             }
@@ -132,8 +143,22 @@ fun NavApp() {
             }
             entry<MineScreenKey> {
                 MineScreen { menuTitle ->
-                    // Handle menu item click
+                    if (menuTitle == "设置") {
+                        backStack.add(SettingsScreenKey)
+                    }
                 }
+            }
+            entry<SettingsScreenKey> {
+                SettingsScreen(
+                    onBackClick = {
+                        backStack.removeAt(backStack.lastIndex)
+                    },
+                    onLogout = {
+                        loginStateManager.logout()
+                        backStack.clear()
+                        backStack.add(LoginScreenKey)
+                    },
+                )
             }
         },
     )

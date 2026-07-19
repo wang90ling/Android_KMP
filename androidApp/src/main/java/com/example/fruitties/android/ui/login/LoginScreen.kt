@@ -1,45 +1,30 @@
-/*
- * Copyright 2024 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.fruitties.android.ui.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -53,213 +38,331 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fruitties.android.R
 import com.example.fruitties.android.ui.AppTheme
 
-/**
- * @author wangling
- * @date 2026/7/17 17:47
- * @description 登录界面
- */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onRegisterClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
+    var phoneNumber by remember { mutableStateOf("") }
+    var verificationCode by remember { mutableStateOf("") }
+    var isChecked by remember { mutableStateOf(false) }
+    var countdown by remember { mutableStateOf(0) }
 
     LoginScreen(
-        username = username,
-        password = password,
-        onUsernameChange = { username = it },
-        onPasswordChange = { password = it },
-        onLoginClick = {
-            focusManager.clearFocus()
-            onLoginSuccess()
+        phoneNumber = phoneNumber,
+        verificationCode = verificationCode,
+        isChecked = isChecked,
+        countdown = countdown,
+        onPhoneNumberChange = { phoneNumber = it },
+        onVerificationCodeChange = { verificationCode = it },
+        onCheckedChange = { isChecked = it },
+        onGetVerificationCode = {
+            if (phoneNumber.length == 11) {
+                countdown = 60
+            }
         },
-        onRegisterClick = onRegisterClick,
+        onLoginClick = {
+            if (isChecked && phoneNumber.length == 11 && verificationCode.length >= 4) {
+                onLoginSuccess()
+            }
+        },
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
 fun LoginScreen(
-    username: String,
-    password: String,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
+    phoneNumber: String,
+    verificationCode: String,
+    isChecked: Boolean,
+    countdown: Int,
+    onPhoneNumberChange: (String) -> Unit,
+    onVerificationCodeChange: (String) -> Unit,
+    onCheckedChange: (Boolean) -> Unit,
+    onGetVerificationCode: () -> Unit,
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(
-                WindowInsets.safeDrawing.only(
-                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                ).asPaddingValues(),
-            ),
+            .background(Color(0xFFFDFBFF)),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize(),
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
-
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(top = 56.dp, start = 16.dp, end = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "F",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                        contentDescription = "返回",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color(0xFF1F1F3A),
+                    )
+                }
+                TextButton(onClick = {}) {
+                    Text(
+                        text = "登录遇到问题？",
+                        fontSize = 14.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = stringResource(R.string.app_login_title),
+                text = "HI~欢迎登录",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            Text(
-                text = stringResource(R.string.app_login_subtitle),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
+                color = Color(0xFF1F1F3A),
+                modifier = Modifier.padding(start = 32.dp),
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            OutlinedTextField(
-                value = username,
-                onValueChange = onUsernameChange,
-                label = { Text(stringResource(R.string.login_username)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = onPasswordChange,
-                label = { Text(stringResource(R.string.login_password)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        onLoginClick()
+            Column(
+                modifier = Modifier.padding(horizontal = 18.dp),
+            ) {
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = onPhoneNumberChange,
+                    placeholder = {
+                        Text(
+                            text = "请输入手机号",
+                            fontSize = 14.sp,
+                            color = Color(0xFF8B8BA7),
+                        )
                     },
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextButton(
-                onClick = { },
-                modifier = Modifier.align(Alignment.End),
-            ) {
-                Text(
-                    text = stringResource(R.string.forgot_password),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF9333EA),
+                        unfocusedBorderColor = Color(0xFFD1D5DB),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                    ),
+                    leadingIcon = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 10.dp,end = 2.dp),
+                        ) {
+                            Text(
+                                text = "+86",
+                                fontSize = 14.sp,
+                                color = Color(0xFF1F1F3A),
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFF8B8BA7),
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                    ),
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = onLoginClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                enabled = username.isNotBlank() && password.isNotBlank(),
-            ) {
-                Text(
-                    text = stringResource(R.string.login_button),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                OutlinedTextField(
+                    value = verificationCode,
+                    onValueChange = onVerificationCodeChange,
+                    placeholder = {
+                        Text(
+                            text = "请输入验证码",
+                            fontSize = 14.sp,
+                            color = Color(0xFF8B8BA7),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF9333EA),
+                        unfocusedBorderColor = Color(0xFFD1D5DB),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.QrCode,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = Color(0xFF8B8BA7),
+                        )
+                    },
+                    trailingIcon = {
+                        TextButton(
+                            onClick = onGetVerificationCode,
+                            enabled = countdown == 0 && phoneNumber.length == 11,
+                            modifier = Modifier.padding(end = 8.dp),
+                        ) {
+                            Text(
+                                text = if (countdown > 0) "${countdown}s后获取" else "获取验证码",
+                                fontSize = 14.sp,
+                                color = Color(0xFF9333EA),
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                    ),
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 4.dp),
+                ) {
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = onCheckedChange,
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF9333EA),
+                            uncheckedColor = Color(0xFFD1D5DB),
+                            checkmarkColor = Color.White,
+                        ),
+                    )
+                    Text(
+                        text = "我已阅读并同意",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                    Text(
+                        text = "用户协议",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9333EA),
+                    )
+                    Text(
+                        text = "和",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                    Text(
+                        text = "隐私政策",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9333EA),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = onLoginClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White,
+                    ),
+                    enabled = isChecked && phoneNumber.length == 11 && verificationCode.length >= 4,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF3B82F6), Color(0xFF9333EA), Color(0xFFEC4899)),
+                                )
+                            )
+                            .clip(RoundedCornerShape(28.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "登录",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TextButton(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "账号登录",
+                        fontSize = 14.sp,
+                        color = Color(0xFF8B8BA7),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            TextButton(
-                onClick = onRegisterClick,
-                modifier = Modifier.padding(bottom = 32.dp),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 40.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.no_account_register),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp,
+                    text = "其他登录方式",
+                    fontSize = 12.sp,
+                    color = Color(0xFF8B8BA7),
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode,
+                            contentDescription = "QQ登录",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFF1B9AF7),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Chat,
+                            contentDescription = "微信登录",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFF07C160),
+                        )
+                    }
+                }
             }
         }
     }
@@ -270,12 +373,16 @@ fun LoginScreen(
 private fun LoginScreenPreview() {
     AppTheme() {
         LoginScreen(
-            username = "",
-            password = "",
-            onUsernameChange = {},
-            onPasswordChange = {},
+            phoneNumber = "",
+            verificationCode = "",
+            isChecked = false,
+            countdown = 0,
+            onPhoneNumberChange = {},
+            onVerificationCodeChange = {},
+            onCheckedChange = {},
+            onGetVerificationCode = {},
             onLoginClick = {},
-            onRegisterClick = {},
+            onBackClick = {},
         )
     }
 }
