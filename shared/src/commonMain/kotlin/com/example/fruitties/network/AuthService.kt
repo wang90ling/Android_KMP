@@ -29,6 +29,7 @@ import com.example.fruitties.network.core.KtorHttpClient
 import com.example.fruitties.network.core.NetworkResult
 import com.example.fruitties.network.core.UploadFile
 import kotlinx.serialization.json.Json
+import co.touchlab.kermit.Logger
 
 /**
  * @author wangling
@@ -50,14 +51,14 @@ interface AuthService {
      * @param phone 手机号
      * @param type 验证码类型
      */
-    suspend fun sendSmsCode(phone: String, type: Int = 1): NetworkResult<BaseResponse<Unit>>
+    suspend fun sendSmsCode(telephone: String, type: Int = 1): NetworkResult<BaseResponse<Unit>>
 
     /**
      * 验证验证码
      * @param phone 手机号
      * @param code 验证码
      */
-    suspend fun verifySmsCode(phone: String, code: String): NetworkResult<BaseResponse<Unit>>
+    suspend fun verifySmsCode(telephone: String, code: String): NetworkResult<BaseResponse<Unit>>
 
     /**
      * 验证码登录
@@ -66,12 +67,7 @@ interface AuthService {
      * @param deviceId 设备ID
      * @param deviceType 设备类型
      */
-    suspend fun smsLogin(
-        phone: String,
-        code: String,
-        deviceId: String? = null,
-        deviceType: Int = 1
-    ): NetworkResult<BaseResponse<LoginResponse>>
+    suspend fun smsLogin(req:SmsLoginRequest): NetworkResult<BaseResponse<LoginResponse>>
 
     /**
      * 刷新Token
@@ -134,8 +130,8 @@ class AuthServiceImpl(
     }
 ) : AuthService {
 
-    override suspend fun sendSmsCode(phone: String, type: Int): NetworkResult<BaseResponse<Unit>> {
-        val request = SendSmsCodeRequest(phone = phone, type = type)
+    override suspend fun sendSmsCode(telephone: String, type: Int): NetworkResult<BaseResponse<Unit>> {
+        val request = SendSmsCodeRequest(telephone = telephone, type = type)
         return httpClient.post(
             url = "$baseUrl${ApiRoutes.Auth.SEND_SMS_CODE}",
             body = request,
@@ -143,8 +139,8 @@ class AuthServiceImpl(
         )
     }
 
-    override suspend fun verifySmsCode(phone: String, code: String): NetworkResult<BaseResponse<Unit>> {
-        val request = VerifySmsCodeRequest(phone = phone, code = code)
+    override suspend fun verifySmsCode(telephone: String, code: String): NetworkResult<BaseResponse<Unit>> {
+        val request = VerifySmsCodeRequest(telephone = telephone, code = code)
         return httpClient.post(
             url = "$baseUrl${ApiRoutes.Auth.VERIFY_SMS_CODE}",
             body = request,
@@ -152,21 +148,11 @@ class AuthServiceImpl(
         )
     }
 
-    override suspend fun smsLogin(
-        phone: String,
-        code: String,
-        deviceId: String?,
-        deviceType: Int
-    ): NetworkResult<BaseResponse<LoginResponse>> {
-        val request = SmsLoginRequest(
-            phone = phone,
-            code = code,
-            deviceId = deviceId,
-            deviceType = deviceType
-        )
+    override suspend fun smsLogin(req:SmsLoginRequest): NetworkResult<BaseResponse<LoginResponse>> {
+        Logger.d("smsLogin 1:"+req.toString())
         return httpClient.post(
-            url = "$baseUrl${ApiRoutes.Auth.LOGIN_BY_SMS}",
-            body = request,
+            url = "https://apidev.dianta.pw/app${ApiRoutes.Auth.LOGIN_BY_SMS}",
+            body = req,
             jsonSerializer = json
         )
     }

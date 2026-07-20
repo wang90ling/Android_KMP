@@ -23,13 +23,13 @@ package com.example.fruitties.network.core
 object ApiRoutes {
 
     // 开发环境 API 地址
-    const val DEV_BASE_URL = "https://dev-api.example.com"
+    const val DEV_BASE_URL = "https://apidev.dianta.pw/app"
 
     // 测试环境 API 地址
-    const val STAGING_BASE_URL = "https://staging-api.example.com"
+    const val STAGING_BASE_URL = "https://apidev.dianta.pw/app"
 
     // 生产环境 API 地址
-    const val PROD_BASE_URL = "https://api.example.com"
+    const val PROD_BASE_URL = "https://apidev.dianta.pw/app"
 
     /**
      * 获取当前环境的 API 地址
@@ -51,7 +51,7 @@ object ApiRoutes {
         const val SEND_SMS_CODE = "$PREFIX/sms/send"           // 发送验证码
         const val VERIFY_SMS_CODE = "$PREFIX/sms/verify"       // 验证验证码
         const val LOGIN = "$PREFIX/login"                       // 登录
-        const val LOGIN_BY_SMS = "$PREFIX/login/sms"            // 验证码登录
+        const val LOGIN_BY_SMS = "/login/code"            // 验证码登录
         const val LOGOUT = "$PREFIX/logout"                    // 登出
         const val REFRESH_TOKEN = "$PREFIX/refresh"            // 刷新Token
         const val REGISTER = "$PREFIX/register"                 // 注册

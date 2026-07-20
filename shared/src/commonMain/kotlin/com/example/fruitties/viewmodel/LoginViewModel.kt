@@ -21,6 +21,7 @@ import co.touchlab.kermit.Logger
 import com.example.fruitties.DataRepository
 import com.example.fruitties.model.CartItemDetails
 import com.example.fruitties.model.LoginResponse
+import com.example.fruitties.model.SmsLoginRequest
 import com.example.fruitties.model.SmsType
 import com.example.fruitties.model.UserInfo
 import com.example.fruitties.network.core.UploadProgress
@@ -53,6 +54,29 @@ class LoginViewModel(
     private val repository: DataRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
+
+    // ==================== 验证码登录相关逻辑 ====================
+
+    private val _phone = MutableStateFlow("")
+    val phone: StateFlow<String> = _phone.asStateFlow()
+
+    private val _smsCode = MutableStateFlow("")
+    val smsCode: StateFlow<String> = _smsCode.asStateFlow()
+
+    private val _countdown = MutableStateFlow(0)
+    val countdown: StateFlow<Int> = _countdown.asStateFlow()
+
+    private val _loginUiState = MutableStateFlow<LoginUiStateV2>(LoginUiStateV2.Idle)
+    val loginUiState: StateFlow<LoginUiStateV2> = _loginUiState.asStateFlow()
+
+    private val _userInfo = MutableStateFlow<UserInfo?>(null)
+    val userInfo: StateFlow<UserInfo?> = _userInfo.asStateFlow()
+
+    private val _uploadProgress = MutableStateFlow<UploadProgress>(UploadProgress.Idle)
+    val uploadProgress: StateFlow<UploadProgress> = _uploadProgress.asStateFlow()
+
+    private val _events = MutableSharedFlow<LoginEvent>()
+    val events = _events.asSharedFlow()
 
     init {
         Logger.v { "LoginViewModel created" }
@@ -87,29 +111,6 @@ class LoginViewModel(
             repository.removeFromCart(cartItem.fruittie)
         }
     }
-
-    // ==================== 验证码登录相关逻辑 ====================
-
-    private val _phone = MutableStateFlow("")
-    val phone: StateFlow<String> = _phone.asStateFlow()
-
-    private val _smsCode = MutableStateFlow("")
-    val smsCode: StateFlow<String> = _smsCode.asStateFlow()
-
-    private val _countdown = MutableStateFlow(0)
-    val countdown: StateFlow<Int> = _countdown.asStateFlow()
-
-    private val _loginUiState = MutableStateFlow<LoginUiStateV2>(LoginUiStateV2.Idle)
-    val loginUiState: StateFlow<LoginUiStateV2> = _loginUiState.asStateFlow()
-
-    private val _userInfo = MutableStateFlow<UserInfo?>(null)
-    val userInfo: StateFlow<UserInfo?> = _userInfo.asStateFlow()
-
-    private val _uploadProgress = MutableStateFlow<UploadProgress>(UploadProgress.Idle)
-    val uploadProgress: StateFlow<UploadProgress> = _uploadProgress.asStateFlow()
-
-    private val _events = MutableSharedFlow<LoginEvent>()
-    val events = _events.asSharedFlow()
 
     /**
      * 监听登录状态变化
@@ -182,9 +183,10 @@ class LoginViewModel(
     /**
      * 验证码登录
      */
-    fun smsLogin(deviceId: String? = null, deviceType: Int = 1) {
-        val currentPhone = _phone.value
-        val currentCode = _smsCode.value
+    fun smsLogin(req:SmsLoginRequest) {
+        val currentPhone = req.telephone
+        val currentCode = req.code
+        Logger.d("smsLogin 0:"+req.toString())
 
         if (!validatePhone(currentPhone)) {
             viewModelScope.launch {
@@ -203,15 +205,13 @@ class LoginViewModel(
         viewModelScope.launch {
             _loginUiState.value = LoginUiStateV2.Loading
 
-            authRepository.smsLogin(
-                phone = currentPhone,
-                code = currentCode,
-                deviceId = deviceId,
-                deviceType = deviceType
-            ).onSuccess { response ->
+            authRepository.smsLogin(req).onSuccess { response ->
                     Logger.v { "Login successful: ${response.token}" }
+                    _loginUiState.value = LoginUiStateV2.Success(response)
+                    _events.emit(LoginEvent.LoginSuccess(response))
                 }
                 .onFailure { error ->
+                    _loginUiState.value = LoginUiStateV2.Error(error.message ?: "登录失败")
                     _events.emit(LoginEvent.Error(error.message ?: "登录失败"))
                 }
         }
@@ -315,7 +315,7 @@ class LoginViewModel(
      * 验证验证码
      */
     private fun validateSmsCode(code: String): Boolean {
-        return code.length == 6 && code.all { it.isDigit() }
+        return code.length == 4 && code.all { it.isDigit() }
     }
 
     /**

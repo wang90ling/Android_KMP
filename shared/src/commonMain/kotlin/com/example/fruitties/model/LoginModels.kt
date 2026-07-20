@@ -29,8 +29,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class SendSmsCodeRequest(
-    @SerialName("phone")
-    val phone: String,
+    @SerialName("telephone")
+    val telephone: String,
     @SerialName("type")
     val type: Int = SmsType.LOGIN.value  // 默认登录类型
 )
@@ -50,8 +50,8 @@ enum class SmsType(val value: Int) {
  */
 @Serializable
 data class VerifySmsCodeRequest(
-    @SerialName("phone")
-    val phone: String,
+    @SerialName("telephone")
+    val telephone: String,
     @SerialName("code")
     val code: String
 )
@@ -61,14 +61,14 @@ data class VerifySmsCodeRequest(
  */
 @Serializable
 data class SmsLoginRequest(
-    @SerialName("phone")
-    val phone: String,
+    @SerialName("telephone")
+    val telephone: String,
     @SerialName("code")
     val code: String,
-    @SerialName("deviceId")
-    val deviceId: String? = null,
-    @SerialName("deviceType")
-    val deviceType: Int = DeviceType.ANDROID.value
+    @SerialName("phoneCountryCode")
+    val phoneCountryCode: String,
+    @SerialName("password")
+    val password: String? = null,
 )
 
 /**

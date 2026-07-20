@@ -36,6 +36,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Fruitties"
+rootProject.name = "KMP_CODE"
 include(":androidApp")
 include(":shared")

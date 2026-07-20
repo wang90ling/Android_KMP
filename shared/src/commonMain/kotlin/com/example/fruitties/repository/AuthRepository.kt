@@ -15,10 +15,12 @@
  */
 package com.example.fruitties.repository
 
+import co.touchlab.kermit.Logger
 import com.example.fruitties.model.LoginResponse
 import com.example.fruitties.model.RefreshTokenResponse
 import com.example.fruitties.model.RegisterRequest
 import com.example.fruitties.model.ForgetPasswordRequest
+import com.example.fruitties.model.SmsLoginRequest
 import com.example.fruitties.model.SmsType
 import com.example.fruitties.model.UserInfo
 import com.example.fruitties.network.AuthService
@@ -95,17 +97,13 @@ class AuthRepository(
      * @param deviceId 设备ID
      * @param deviceType 设备类型
      */
-    suspend fun smsLogin(
-        phone: String,
-        code: String,
-        deviceId: String? = null,
-        deviceType: Int = 1
-    ): Result<LoginResponse> {
+    suspend fun smsLogin(req: SmsLoginRequest): Result<LoginResponse> {
         _loginState.value = LoginState.Loading
 
-        return when (val result = authService.smsLogin(phone, code, deviceId, deviceType)) {
+        return when (val result = authService.smsLogin(req)) {
             is NetworkResult.Success -> {
                 val response = result.data
+                Logger.d("smsLogin:"+response.toString())
                 if (response.isSuccess && response.data != null) {
                     val loginResponse = response.data
                     _currentToken = loginResponse.token

@@ -1,5 +1,6 @@
 package com.example.fruitties.android.ui.login
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,38 +52,106 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fruitties.android.FruittiesAndroidApp
+import com.example.fruitties.android.LocalAppContainer
 import com.example.fruitties.android.R
 import com.example.fruitties.android.ui.AppTheme
+import com.example.fruitties.model.SmsLoginRequest
+import com.example.fruitties.model.SmsType
+import com.example.fruitties.viewmodel.LoginEvent
+import com.example.fruitties.viewmodel.LoginViewModel
+import com.example.fruitties.viewmodel.LoginUiStateV2
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onBackClick: () -> Unit,
 ) {
+    val viewModel: LoginViewModel = viewModel(factory = LocalAppContainer.current.loginViewModelFactory)
     var phoneNumber by remember { mutableStateOf("") }
     var verificationCode by remember { mutableStateOf("") }
     var isChecked by remember { mutableStateOf(false) }
     var countdown by remember { mutableStateOf(0) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is LoginEvent.LoginSuccess -> {
+                    showLoading = false
+                    Log.d("WANGLING", "登录成功: ${event.loginResponse.token}")
+                    onLoginSuccess()
+                }
+                is LoginEvent.LoginError -> {
+                    showLoading = false
+                    errorMessage = event.message
+                    Log.e("WANGLING", "登录失败: ${event.message}")
+                }
+                is LoginEvent.Error -> {
+                    showLoading = false
+                    errorMessage = event.message
+                    Log.e("WANGLING", "错误: ${event.message}")
+                }
+                is LoginEvent.SmsCodeSent -> {
+                    Log.d("WANGLING", "验证码发送成功")
+                }
+                else -> {}
+            }
+        }
+    }
+
+    val countdownState by viewModel.countdown.collectAsState()
+    val loginUiState by viewModel.loginUiState.collectAsState()
+
+    LaunchedEffect(countdownState) {
+        countdown = countdownState
+    }
+
+    LaunchedEffect(loginUiState) {
+        when (loginUiState) {
+            is LoginUiStateV2.Loading -> showLoading = true
+            is LoginUiStateV2.Success -> showLoading = false
+            is LoginUiStateV2.Error -> {
+                showLoading = false
+                errorMessage = (loginUiState as LoginUiStateV2.Error).message
+            }
+            else -> showLoading = false
+        }
+    }
 
     LoginScreen(
         phoneNumber = phoneNumber,
         verificationCode = verificationCode,
         isChecked = isChecked,
         countdown = countdown,
-        onPhoneNumberChange = { phoneNumber = it },
-        onVerificationCodeChange = { verificationCode = it },
+        errorMessage = errorMessage,
+        showLoading = showLoading,
+        onPhoneNumberChange = {
+            phoneNumber = it
+            viewModel.updatePhone(it)
+        },
+        onVerificationCodeChange = {
+            verificationCode = it
+            viewModel.updateSmsCode(it)
+        },
         onCheckedChange = { isChecked = it },
         onGetVerificationCode = {
             if (phoneNumber.length == 11) {
-                countdown = 60
+                viewModel.sendSmsCode(SmsType.LOGIN)
             }
         },
         onLoginClick = {
-            if (isChecked && phoneNumber.length == 11 && verificationCode.length >= 4) {
-                onLoginSuccess()
+            if (phoneNumber.length == 11 && verificationCode.length >= 4) {
+                errorMessage = null
+                val req = SmsLoginRequest(phoneNumber,verificationCode,"+86","")
+                viewModel.smsLogin(req)
             }
         },
         onBackClick = onBackClick,
+        onDismissError = { errorMessage = null },
     )
 }
 
@@ -90,12 +161,15 @@ fun LoginScreen(
     verificationCode: String,
     isChecked: Boolean,
     countdown: Int,
+    errorMessage: String? = null,
+    showLoading: Boolean = false,
     onPhoneNumberChange: (String) -> Unit,
     onVerificationCodeChange: (String) -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     onGetVerificationCode: () -> Unit,
     onLoginClick: () -> Unit,
     onBackClick: () -> Unit,
+    onDismissError: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -286,7 +360,11 @@ fun LoginScreen(
                             if (isLoginEnabled) {
                                 Modifier.background(
                                     Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFF3B82F6), Color(0xFF9333EA), Color(0xFFEC4899)),
+                                        colors = listOf(
+                                            Color(0xFF3B82F6),
+                                            Color(0xFF9333EA),
+                                            Color(0xFFEC4899)
+                                        ),
                                     )
                                 )
                             } else {
@@ -366,6 +444,68 @@ fun LoginScreen(
                             modifier = Modifier.size(24.dp),
                             tint = Color(0xFF07C160),
                         )
+                    }
+                }
+            }
+        }
+
+        if (showLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x50000000)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "登录中...",
+                        fontSize = 14.sp,
+                        color = Color(0xFF9333EA),
+                    )
+                }
+            }
+        }
+
+        if (errorMessage != null) {
+            Dialog(onDismissRequest = onDismissError) {
+                Box(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = errorMessage,
+                            fontSize = 16.sp,
+                            color = Color(0xFF1F1F3A),
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(Color(0xFF9333EA))
+                                .clickable { onDismissError() },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "确定",
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }
