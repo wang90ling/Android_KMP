@@ -146,7 +146,7 @@ fun LoginScreen(
         onLoginClick = {
             if (phoneNumber.length == 11 && verificationCode.length >= 4) {
                 errorMessage = null
-                val req = SmsLoginRequest(phoneNumber,verificationCode,"+86","")
+                val req = SmsLoginRequest(phoneNumber, verificationCode, "+86", null)
                 viewModel.smsLogin(req)
             }
         },

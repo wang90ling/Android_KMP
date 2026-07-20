@@ -88,11 +88,21 @@ data class LoginResponse(
     @SerialName("token")
     val token: String,
     @SerialName("refreshToken")
-    val refreshToken: String,
+    val refreshToken: String? = null,
     @SerialName("expiresIn")
-    val expiresIn: Long,
+    val expiresIn: Long = 0,
+    @SerialName("userId")
+    val userId: String? = null,
     @SerialName("userInfo")
-    val userInfo: UserInfo? = null
+    val userInfo: UserInfo? = null,
+    @SerialName("baseAuthParams")
+    val baseAuthParams: String? = null,
+    @SerialName("choiceFlag")
+    val choiceFlag: Boolean = false,
+    @SerialName("firstLogin")
+    val firstLogin: Boolean = false,
+    @SerialName("loginFaceAuthFlag")
+    val loginFaceAuthFlag: Int = 0
 )
 
 /**
@@ -109,7 +119,7 @@ data class UserInfo(
     @SerialName("avatar")
     val avatar: String? = null,
     @SerialName("phone")
-    val phone: String,
+    val phone: String? = null,
     @SerialName("email")
     val email: String? = null,
     @SerialName("gender")

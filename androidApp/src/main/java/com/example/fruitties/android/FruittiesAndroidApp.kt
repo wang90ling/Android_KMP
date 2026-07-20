@@ -18,6 +18,8 @@ package com.example.fruitties.android
 
 import android.app.Application
 import androidx.compose.runtime.staticCompositionLocalOf
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.platformLogWriter
 import com.example.fruitties.di.AppContainer
 import com.example.fruitties.di.Factory
 
@@ -27,6 +29,8 @@ class FruittiesAndroidApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // 配置 Kermit 日志输出到 Android Logcat
+        Logger.setLogWriters(platformLogWriter())
         container = AppContainer(Factory(this))
     }
 }

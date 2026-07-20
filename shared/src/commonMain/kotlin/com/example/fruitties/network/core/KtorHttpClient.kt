@@ -30,9 +30,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -230,6 +232,23 @@ class KtorHttpClient(val client: HttpClient) {
         responseType: ResponseType
     ): NetworkResult<T> {
         return try {
+            // 手动打印 HTTP 请求日志，便于调试
+            Logger.d { "HTTP_REQUEST ===> $method $url" }
+            headers.takeIf { it.isNotEmpty() }?.let {
+                Logger.d { "HTTP_REQUEST_HEADERS ==> $it" }
+            }
+            body?.let {
+                val bodyString = when (it) {
+                    is String -> it
+                    else -> try {
+                        jsonSerializer.encodeToString(it)
+                    } catch (e: Exception) {
+                        it.toString()
+                    }
+                }
+                Logger.d { "HTTP_REQUEST_BODY ==> $bodyString" }
+            }
+
             val response: HttpResponse = when (method) {
                 "GET" -> {
                     client.get(url) {
@@ -238,6 +257,7 @@ class KtorHttpClient(val client: HttpClient) {
                         }
                         this.headers {
                             append(HttpHeaders.Accept, ContentType.Application.Json.toString())
+                            append("x-device", "APP")
                             headers.forEach { (key, value) ->
                                 append(key, value)
                             }
@@ -248,6 +268,7 @@ class KtorHttpClient(val client: HttpClient) {
                     client.post(url) {
                         this.headers {
                             append(HttpHeaders.Accept, ContentType.Application.Json.toString())
+                            append("x-device", "APP")
                             headers.forEach { (key, value) ->
                                 append(key, value)
                             }
@@ -259,8 +280,13 @@ class KtorHttpClient(val client: HttpClient) {
                 else -> throw IllegalArgumentException("Unsupported method: $method")
             }
 
-            parseResponse<T>(response, jsonSerializer, responseType)
+            val responseBody = response.bodyAsText()
+            Logger.d { "HTTP_RESPONSE <=== ${response.status.value} ${response.status.description}" }
+            Logger.d { "HTTP_RESPONSE_BODY <=== $responseBody" }
+
+            parseResponseWithBody<T>(response, responseBody, jsonSerializer, responseType)
         } catch (e: Exception) {
+            Logger.e(e) { "HTTP_ERROR <=== ${e.message}" }
             NetworkResult.Error(
                 code = -1,
                 message = e.message ?: "Request failed",
@@ -274,12 +300,21 @@ class KtorHttpClient(val client: HttpClient) {
         jsonSerializer: Json,
         responseType: ResponseType
     ): NetworkResult<T> {
+        val body = response.bodyAsText()
+        return parseResponseWithBody(response, body, jsonSerializer, responseType)
+    }
+
+    suspend inline fun <reified T> parseResponseWithBody(
+        response: HttpResponse,
+        body: String,
+        jsonSerializer: Json,
+        responseType: ResponseType
+    ): NetworkResult<T> {
         return when {
             response.status.isSuccess() -> {
                 when (responseType) {
                     ResponseType.JSON -> {
                         try {
-                            val body = response.bodyAsText()
                             val result = jsonSerializer.decodeFromString<T>(body)
                             NetworkResult.Success(result)
                         } catch (e: Exception) {
@@ -292,18 +327,18 @@ class KtorHttpClient(val client: HttpClient) {
                     }
                     ResponseType.STRING -> {
                         @Suppress("UNCHECKED_CAST")
-                        NetworkResult.Success(response.bodyAsText() as T)
+                        NetworkResult.Success(body as T)
                     }
                     ResponseType.BYTES -> {
                         @Suppress("UNCHECKED_CAST")
-                        NetworkResult.Success(response.bodyAsText().encodeToByteArray() as T)
+                        NetworkResult.Success(body.encodeToByteArray() as T)
                     }
                 }
             }
             else -> {
                 NetworkResult.Error(
                     code = response.status.value,
-                    message = "HTTP Error: ${response.status.description}"
+                    message = "HTTP Error: ${response.status.description}, body: $body"
                 )
             }
         }

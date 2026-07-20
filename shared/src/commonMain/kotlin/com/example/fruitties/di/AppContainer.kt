@@ -25,12 +25,16 @@ import com.example.fruitties.network.FruittieNetworkApi
 import com.example.fruitties.network.core.ApiRoutes
 import com.example.fruitties.network.core.KtorHttpClient
 import com.example.fruitties.network.core.TimeoutConfig
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger as KtorLogger
+import io.ktor.client.plugins.logging.Logging
 import com.example.fruitties.repository.AuthRepository
 import com.example.fruitties.viewmodel.CartViewModel
 import com.example.fruitties.viewmodel.FruittieViewModel
 import com.example.fruitties.viewmodel.FruittieViewModel.Companion.FRUITTIE_ID_KEY
 import com.example.fruitties.viewmodel.LoginViewModel
 import com.example.fruitties.viewmodel.MainViewModel
+import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -57,6 +61,14 @@ class AppContainer(
                 requestTimeoutMillis = TimeoutConfig.DEFAULT.requestTimeoutMillis
                 connectTimeoutMillis = TimeoutConfig.DEFAULT.connectTimeoutMillis
                 socketTimeoutMillis = TimeoutConfig.DEFAULT.socketTimeoutMillis
+            }
+            install(Logging) {
+                logger = object : KtorLogger {
+                    override fun log(message: String) {
+                        Logger.d { "HTTP: $message" }
+                    }
+                }
+                level = LogLevel.ALL
             }
         }
     }
