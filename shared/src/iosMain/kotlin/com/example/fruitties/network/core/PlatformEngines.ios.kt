@@ -13,16 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.fruitties.di
+package com.example.fruitties.network.core
 
-import com.example.fruitties.database.AppDatabase
-import com.example.fruitties.database.CartDataStore
-import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.darwin.Darwin
 
-expect class Factory {
-    fun createRoomDatabase(): AppDatabase
+/**
+ * @author wangling
+ * @date 2026/7/20 14:00
+ * @description iOS 平台特定的 HttpClient 引擎实现
+ *
+ * Darwin 引擎基于 iOS 原生的 NSURLSession，支持:
+ * - TLS/SSL 证书验证
+ * - HTTP/2
+ * - 自动代理配置
+ * - Cookie 管理
+ */
+actual fun getHttpClientEngine() = Darwin.create()
 
-    fun createCartDataStore(): CartDataStore
-
-    fun createHttpEngine(): HttpClientEngine
-}
+actual fun getPlatformName(): String = "iOS"

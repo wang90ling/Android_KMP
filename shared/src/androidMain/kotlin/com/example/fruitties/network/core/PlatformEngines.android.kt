@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.fruitties.di
+package com.example.fruitties.network.core
 
-import com.example.fruitties.database.AppDatabase
-import com.example.fruitties.database.CartDataStore
-import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.okhttp.OkHttp
 
-expect class Factory {
-    fun createRoomDatabase(): AppDatabase
+/**
+ * @author wangling
+ * @date 2026/7/20 14:00
+ * @description Android 平台特定的 HttpClient 引擎实现
+ */
+actual fun getHttpClientEngine() = OkHttp.create()
 
-    fun createCartDataStore(): CartDataStore
-
-    fun createHttpEngine(): HttpClientEngine
-}
+actual fun getPlatformName(): String = "Android"

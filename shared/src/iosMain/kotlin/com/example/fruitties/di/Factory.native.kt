@@ -20,6 +20,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.fruitties.database.AppDatabase
 import com.example.fruitties.database.CartDataStore
 import com.example.fruitties.database.DB_FILE_NAME
+import io.ktor.client.engine.darwin.Darwin
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -43,6 +44,8 @@ actual class Factory {
         CartDataStore {
             "${fileDirectory()}/cart.json"
         }
+
+    actual fun createHttpEngine() = Darwin.create()
 
     @OptIn(ExperimentalForeignApi::class)
     private fun fileDirectory(): String {
